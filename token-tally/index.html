@@ -222,7 +222,7 @@
   </div>
 
   <!-- Back to site base -->
-  <button id="backBtn" class="btn btn--ghost back-btn" title="Go back to site base" aria-label="Go back to site base">← Back</button>
+  <a class="btn btn--ghost back-btn" title="Go back to site base" aria-label="Go back to site base" href="..">← Back</a>
 
   <script type="module">
     // CDN + version lock
@@ -409,33 +409,6 @@ Words: ${els.words.textContent}`;
     restore();
     await loadTokenizer(currentEncName);
     updateCounts();
-
-    // Back button logic - navigate to the site base (drop the last path segment)
-    function siteBaseUrl(){
-      try{
-        const loc = window.location;
-        // pathname may be like '/side-quests/token-tally/' or '/token-tally/'
-        const p = String(loc.pathname || '/').replace(/\/+$|^\/+/g, ''); // remove leading/trailing slashes
-        if(!p) return `${loc.protocol}//${loc.host}/`;
-        const parts = p.split('/');
-        // drop the last segment
-        parts.pop();
-        const basePath = parts.join('/');
-        const suffix = basePath ? `/${basePath}/` : '/';
-        return `${loc.protocol}//${loc.host}${suffix}`;
-      }catch(_){
-        return '/';
-      }
-    }
-
-    const backBtn = document.getElementById('backBtn');
-    if(backBtn){
-      backBtn.addEventListener('click', () => {
-        const dest = siteBaseUrl();
-        // Use location.assign to allow navigation and history
-        window.location.assign(dest);
-      });
-    }
   </script>
 </body>
 </html>
