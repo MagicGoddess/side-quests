@@ -1,0 +1,16 @@
+{
+  "name": "side-quests",
+  "version": "1.0.0",
+  "description": "Collection of side quest applications",
+  "scripts": {
+    "serve": "serve -l 3333 -n"
+  },
+  "devDependencies": {
+    "serve": "^14.2.5"
+  },
+  "keywords": [
+    "token-tally",
+    "static-server"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Token Tally — LLM Token Counter</title>
+  <meta name="description" content="Accurate LLM token counting in your browser using OpenAI tiktoken." />
+  <link rel="preconnect" href="https://unpkg.com">
+  <style>
+    :root{
+      --bg: #0b0b10;
+      --panel: #13131a;
+      --elev: #191923;
+      --text: #eaeaf0;
+      --muted: #a6a6b3;
+      --accent: #ff2d9b; /* magenta */
+      --accent-2: #b3006b;
+      --ring: rgba(255,45,155,.35);
+      --ok: #20d27d;
+      --warn: #ffae00;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 5% -10%, rgba(255,45,155,.08), transparent 60%),
+        radial-gradient(1200px 700px at 120% 110%, rgba(255,45,155,.05), transparent 60%),
+        var(--bg);
+    }
+    .wrap{
+      max-width: 1100px; margin: 0 auto; padding: 20px;
+      display: grid; gap: 16px;
+    }
+    header{
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 12px 16px; background: var(--panel); border-radius: 12px;
+      border: 1px solid #1f1f2a;
+      box-shadow: 0 0 0 1px rgba(255,45,155,.05), 0 10px 30px rgba(0,0,0,.3);
+    }
+    .brand{ display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:.2px;}
+    .logo{
+      width: 28px; height: 28px; border-radius: 8px; background:
+        conic-gradient(from 200deg, var(--accent), #ff5bb6 40%, #811d59 80%, var(--accent) 100%);
+      box-shadow: 0 0 0 2px rgba(255,45,155,.18), 0 6px 18px rgba(255,45,155,.25);
+    }
+    header .right { display:flex; gap:10px; align-items:center; }
+    .select, .btn{
+      background: #111119; color: var(--text); border:1px solid #222236; border-radius: 10px;
+      padding: 10px 12px; font-weight:600;
+    }
+    .select:hover, .btn:hover{ border-color:#2c2c44; }
+    .btn--accent{
+      background: linear-gradient(180deg, #ff3ea5, #c90a74);
+      border: none; box-shadow: 0 8px 24px rgba(255,45,155,.35), inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    .btn--ghost{
+      background: transparent; border-color: #2b2b3d; color: var(--muted);
+    }
+
+    .grid{
+      display: grid; gap: 16px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 1.3fr .7fr; }
+    }
+    .card{
+      background: var(--panel); border-radius: 14px; border: 1px solid #1f1f2a;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .pad{ padding: 14px; }
+    .head{
+      display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 12px 14px;
+      border-bottom: 1px solid #202033;
+    }
+    .head h3{ margin:0; font-size: 14px; font-weight:700; color:#f3f3f6; letter-spacing:.2px; }
+    .textarea{
+      width: 100%; min-height: 360px; resize: vertical; background: #0e0e15; color: var(--text);
+      border: 1px solid #202036; border-radius: 12px; padding: 14px; outline: none;
+    }
+    .textarea:focus{
+      box-shadow: 0 0 0 3px var(--ring);
+      border-color: #2a2a43;
+    }
+
+    .stats{
+      display:grid; gap:10px; grid-template-columns: repeat(3, 1fr);
+      margin-top: 12px;
+    }
+    .stat{
+      background: #10101a; border:1px solid #202036; border-radius: 12px; padding: 10px 12px;
+    }
+    .stat .label{ color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .stat .value{ font-weight: 800; font-size: 20px; letter-spacing:.2px; }
+    .value--accent{ color: var(--accent); text-shadow: 0 0 18px rgba(255,45,155,.25); }
+
+    .side{
+      display: grid; gap: 12px; padding: 12px;
+    }
+    .notice{
+      background: #101019; border:1px solid #23233a; border-radius: 12px; padding: 12px;
+      color: var(--muted); font-size: 13px;
+    }
+    .ok{ color: var(--ok); }
+    .warn{ color: var(--warn); }
+
+    .footer{
+      color: var(--muted); font-size: 12px; text-align:center; padding: 8px 6px 24px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .pill{
+      display:inline-flex; align-items: center; gap:8px; padding: 6px 10px; border-radius: 999px; font-weight:700;
+      background: #111119; border: 1px solid #26263b; color:#f6f6fa;
+    }
+    .pill .dot{
+      width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255,45,155,.12), 0 0 22px rgba(255,45,155,.35);
+    }
+    .row{ display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
+    .spacer{ flex:1; }
+    .small{ font-size:12px; color: var(--muted); }
+    .error{ color:#ff6b6b; }
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>Token Tally</div>
+        <span class="pill" title="Using OpenAI tiktoken in-browser">
+          <span class="dot"></span> Accurate tokens
+        </span>
+      </div>
+      <div class="right">
+        <select id="model" class="select" title="Choose tokenizer">
+          <option value="cl100k_base" selected>GPT‑4 / GPT‑3.5 (cl100k_base)</option>
+          <option value="o200k_base">GPT‑4o / 4.1 (o200k_base)</option>
+          <option value="p50k_base">GPT‑3 (p50k_base)</option>
+          <option value="r50k_base">GPT‑2 (r50k_base)</option>
+        </select>
+        <button id="clearBtn" class="btn btn--ghost" title="Clear text">Clear</button>
+        <button id="copyBtn" class="btn btn--accent" title="Copy counts">Copy</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card pad">
+        <div class="head">
+          <h3>Enter text</h3>
+          <div class="small" id="status">Loading tokenizer…</div>
+        </div>
+        <textarea id="input" class="textarea" placeholder="Paste or type your text here…"></textarea>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Tokens</div>
+            <div class="value value--accent" id="tokens">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Characters</div>
+            <div class="value" id="chars">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Words</div>
+            <div class="value" id="words">0</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card side">
+        <div class="row">
+          <div>
+            <div class="small">Tokenizer</div>
+            <div id="encName">cl100k_base</div>
+          </div>
+          <div class="spacer"></div>
+          <div id="readyBadge" class="pill hidden"><span class="dot"></span> Ready</div>
+        </div>
+        <div class="notice" id="info">
+          Accurate counts for the selected encoding using OpenAI’s tiktoken in WASM.
+          Default: cl100k_base (GPT‑3.5/GPT‑4).
+        </div>
+        <div class="notice">
+          Tips:
+          <ul style="margin:6px 0 0 18px; padding:0;">
+            <li>Switch the model to match the LLM you use.</li>
+            <li>Counts update as you type (debounced).</li>
+            <li>Data stays in your browser (no server calls).</li>
+          </ul>
+        </div>
+        <div id="err" class="small error hidden"></div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      Token encodings reference: OpenAI Cookbook’s “How to count tokens with Tiktoken”
+      (<a href="https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken" target="_blank" rel="noopener">cookbook.openai.com</a>).
+      Browser WASM init pattern adapted from Stack Overflow guidance on tiktoken in JS
+      (<a href="https://stackoverflow.com/questions/78767515/how-to-use-wasm-tiktoken-in-react-webpack-js" target="_blank" rel="noopener">stackoverflow.com</a>).
+      Files served from unpkg tiktoken package (<a href="https://app.unpkg.com/tiktoken@1.0.16/files/package.json" target="_blank" rel="noopener">unpkg.com</a>).
+    </div>
+  </div>
+
+  <script type="module">
+    // CDN + version lock
+    const TIKTOKEN_VERSION = "1.0.16";
+    const BASE = `https://unpkg.com/tiktoken@${TIKTOKEN_VERSION}`;
+    const WASM_URL = `${BASE}/lite/tiktoken_bg.wasm`;
+    const ENCODER_JSON = {
+      cl100k_base: `${BASE}/encoders/cl100k_base.json`,
+      o200k_base:  `${BASE}/encoders/o200k_base.json`,
+      p50k_base:   `${BASE}/encoders/p50k_base.json`,
+      r50k_base:   `${BASE}/encoders/r50k_base.json`,
+    };
+
+    const els = {
+      input: document.getElementById('input'),
+      model: document.getElementById('model'),
+      tokens: document.getElementById('tokens'),
+      chars: document.getElementById('chars'),
+      words: document.getElementById('words'),
+      status: document.getElementById('status'),
+      err: document.getElementById('err'),
+      info: document.getElementById('info'),
+      encName: document.getElementById('encName'),
+      ready: document.getElementById('readyBadge'),
+      clearBtn: document.getElementById('clearBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+    };
+
+    // Load tiktoken lite/init which exports init + Tiktoken
+    const { init, Tiktoken } = await import(`${BASE}/lite/init.js`);
+
+    let wasmReady = false;
+    let currentEncName = 'cl100k_base';
+    let tokenizer = null; // active tokenizer
+    const tokenizerCache = new Map(); // encName -> Tiktoken instance
+
+    function fmt(n){ return n.toLocaleString(); }
+    function wordCount(s){
+      const t = s.trim();
+      if(!t) return 0;
+      return t.split(/\s+/).length;
+    }
+
+    async function initWasmOnce(){
+      if (wasmReady) return;
+      els.status.textContent = 'Loading tokenizer…';
+      try{
+        const resp = await fetch(WASM_URL);
+        const buf = await resp.arrayBuffer();
+        await init((imports) => WebAssembly.instantiate(buf, imports));
+        wasmReady = true;
+        els.ready.classList.remove('hidden');
+      }catch(e){
+        showError('Failed to initialize tokenizer (WASM). Check network/CORS.');
+        throw e;
+      }
+    }
+
+    async function loadTokenizer(encName){
+      await initWasmOnce();
+
+      if (tokenizerCache.has(encName)){
+        // Switch to cached tokenizer
+        tokenizer = tokenizerCache.get(encName);
+        els.status.textContent = 'Ready';
+        return;
+      }
+      // Fetch encoder JSON and construct tokenizer
+      try{
+        els.status.textContent = `Loading ${encName}…`;
+        const resp = await fetch(ENCODER_JSON[encName]);
+        if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const tk = new Tiktoken(data.bpe_ranks, data.special_tokens, data.pat_str);
+        tokenizerCache.set(encName, tk);
+        tokenizer = tk;
+        els.status.textContent = 'Ready';
+      }catch(e){
+        showError(`Failed to load encoder: ${encName}`);
+        throw e;
+      }
+    }
+
+    function showError(msg){
+      els.err.textContent = msg;
+      els.err.classList.remove('hidden');
+    }
+    function clearError(){
+      els.err.classList.add('hidden');
+      els.err.textContent = '';
+    }
+
+    let pending = null;
+    async function updateCounts(){
+      clearError();
+      const text = els.input.value || '';
+      els.chars.textContent = fmt(text.length);
+      els.words.textContent = fmt(wordCount(text));
+
+      if (!tokenizer){
+        els.tokens.textContent = '0';
+        return;
+      }
+      try{
+        // Debounce slightly for smooth typing
+        if (pending) cancelAnimationFrame(pending);
+        pending = requestAnimationFrame(() => {
+          const ids = tokenizer.encode(text);
+          els.tokens.textContent = fmt(ids.length);
+        });
+      }catch(e){
+        showError('Tokenization error');
+      }
+    }
+
+    // Event wiring
+    els.model.addEventListener('change', async () => {
+      const enc = els.model.value;
+      currentEncName = enc;
+      els.encName.textContent = enc;
+      try{
+        await loadTokenizer(enc);
+        updateCounts();
+        persist();
+      }catch(e){}
+    });
+
+    let debTimer = null;
+    els.input.addEventListener('input', () => {
+      if (debTimer) clearTimeout(debTimer);
+      debTimer = setTimeout(updateCounts, 120);
+      persist();
+    });
+
+    els.clearBtn.addEventListener('click', () => {
+      els.input.value = '';
+      updateCounts();
+      persist();
+    });
+
+    els.copyBtn.addEventListener('click', async () => {
+      const payload = `Model encoding: ${currentEncName}
+Tokens: ${els.tokens.textContent}
+Characters: ${els.chars.textContent}
+Words: ${els.words.textContent}`;
+      try{
+        await navigator.clipboard.writeText(payload);
+        els.info.innerHTML = `<span class="ok">Copied counts to clipboard</span>`;
+        setTimeout(() => els.info.textContent = 'Accurate counts for the selected encoding using OpenAI’s tiktoken in WASM. Default: cl100k_base (GPT‑3.5/GPT‑4).', 1600);
+      }catch(_){
+        els.info.innerHTML = `<span class="warn">Clipboard blocked</span>`;
+        setTimeout(() => els.info.textContent = 'Accurate counts for the selected encoding using OpenAI’s tiktoken in WASM. Default: cl100k_base (GPT‑3.5/GPT‑4).', 1600);
+      }
+    });
+
+    // Persistence
+    function persist(){
+      try{
+        localStorage.setItem('tt_text', els.input.value || '');
+        localStorage.setItem('tt_enc', currentEncName);
+      }catch(_){}
+    }
+    function restore(){
+      try{
+        const enc = localStorage.getItem('tt_enc');
+        const txt = localStorage.getItem('tt_text');
+        if (enc && ENCODER_JSON[enc]) {
+          currentEncName = enc;
+          els.model.value = enc;
+          els.encName.textContent = enc;
+        }
+        if (txt) els.input.value = txt;
+      }catch(_){}
+    }
+
+    // Free tokenizers on unload (optional)
+    window.addEventListener('beforeunload', () => {
+      for (const tk of tokenizerCache.values()){
+        try{ tk.free(); }catch(_){}
+      }
+    });
+
+    // Boot
+    restore();
+    await loadTokenizer(currentEncName);
+    updateCounts();
+  </script>
+</body>
+</html>
