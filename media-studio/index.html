@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Studio — Side Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              magenta: {
+                50: '#fff0fe',
+                100: '#ffd6fb',
+                200: '#ffadf6',
+                300: '#ff7cf0',
+                400: '#ff4ae9',
+                500: '#ff1ae1',
+                600: '#d80bb9',
+                700: '#a4078f',
+                800: '#720566',
+                900: '#43033b'
+              }
+            },
+            boxShadow: {
+              glow: '0 0 30px rgba(255, 26, 225, 0.35)'
+            },
+            backdropBlur: {
+              xl: '20px'
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      /* Optional: smooth gradient background animation */
+      .bg-animated {
+        background: radial-gradient(1200px 600px at 10% 10%, rgba(255, 26, 225, 0.25), transparent 60%),
+                    radial-gradient(1200px 700px at 90% 20%, rgba(139, 92, 246, 0.25), transparent 60%),
+                    radial-gradient(900px 900px at 30% 90%, rgba(59, 130, 246, 0.2), transparent 60%),
+                    linear-gradient(180deg, #0b0b12 0%, #0e0c14 100%);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-animated text-slate-200 selection:bg-magenta-500/30">
+    <div class="mx-auto max-w-6xl px-4 py-8">
+      <header class="mb-6 flex items-center justify-between">
+        <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-magenta-400 via-fuchsia-400 to-violet-400">Media Studio</span>
+          <span class="ml-2 text-slate-400 text-base">— Side Quest</span>
+        </h1>
+        <div class="text-sm text-slate-400">Record video • Capture photos • Voice notes</div>
+      </header>
+
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Preview & controls -->
+        <section class="lg:col-span-2 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-glow">
+          <div class="p-4 md:p-6 space-y-4">
+            <!-- Device Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div class="space-y-2">
+                <label class="text-sm text-slate-300">Camera</label>
+                <select id="videoDeviceSelect" class="w-full bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="">Default Camera</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm text-slate-300">Microphone</label>
+                <select id="audioDeviceSelect" class="w-full bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="">Default Microphone</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Constraints UI -->
+            <div class="flex flex-wrap gap-3 items-center justify-between mb-3">
+              <div class="flex flex-wrap gap-3 items-center">
+                <label class="text-sm text-slate-300">Aspect</label>
+                <select id="aspectSelect" class="bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="native">Native</option>
+                  <option value="16:9">16:9</option>
+                  <option value="9:16">9:16</option>
+                  <option value="4:3">4:3</option>
+                  <option value="3:4">3:4</option>
+                  <option value="3:2">3:2</option>
+                  <option value="2:3">2:3</option>
+                  <option value="1:1">1:1</option>
+                </select>
+                <label class="text-sm text-slate-300">Fit</label>
+                <select id="fitModeSelect" class="bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="cover" selected>Cover</option>
+                  <option value="contain">Contain</option>
+                  <option value="fill">Fill</option>
+                </select>
+                <label class="text-sm text-slate-300">Resolution</label>
+                <select id="resolutionSelect" class="bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="1920,1080">1080p</option>
+                  <option value="1280,720">720p</option>
+                  <option value="640,480">480p</option>
+                  <option value="3840,2160">4K</option>
+                </select>
+                <label class="text-sm text-slate-300">FPS</label>
+                <select id="fpsSelect" class="bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="30">30fps</option>
+                  <option value="24">24fps</option>
+                  <option value="60">60fps</option>
+                </select>
+                <label class="inline-flex items-center gap-2 text-sm text-slate-300">
+                  <input id="includeAudio" type="checkbox" class="accent-magenta-500/80"> Audio
+                </label>
+                <label class="text-sm text-slate-300">Timer</label>
+                <select id="timerSelect" class="bg-white/10 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-magenta-500/60">
+                  <option value="0">Off</option>
+                  <option value="3">3s</option>
+                  <option value="5">5s</option>
+                  <option value="10">10s</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-3">
+                <div id="recordingTimer" class="text-sm text-magenta-400 font-mono hidden">00:00</div>
+                <div id="status" class="text-xs text-slate-400">Idle</div>
+              </div>
+            </div>
+
+            <!-- Visual Metering -->
+            <div id="meteringContainer" class="mb-4 space-y-2 hidden">
+              <!-- Audio meters will be inserted here -->
+            </div>
+
+            <div id="previewContainer" class="relative inline-block w-fit h-auto max-h-[512px] max-w-full mx-auto rounded-xl overflow-hidden bg-black/60 border border-white/10" style="aspect-ratio: 16 / 9;">
+              <div id="countdownBadge" class="hidden absolute right-3 top-3 z-10 px-3 py-1 rounded-full bg-black/70 border border-white/20 text-sm font-medium">3</div>
+              <video id="preview" class="w-full h-full" autoplay playsinline muted></video>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+              <button id="btnPhoto" class="px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 border border-white/10">📸 Take Photo</button>
+            </div>
+
+            <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+                <div class="text-sm text-slate-300 mb-2">Video Recording</div>
+                <div class="flex flex-wrap gap-3">
+                  <button id="btnStartVideo" class="px-4 py-2 rounded-md bg-gradient-to-r from-magenta-600 to-violet-600 hover:from-magenta-500 hover:to-violet-500 focus:ring-2 focus:ring-magenta-500/60">⏺️ Start Recording</button>
+                  <button id="btnStopVideo" class="hidden px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 border border-white/10">⏹️ Stop Recording</button>
+                </div>
+              </div>
+              <div class="rounded-lg border border-white/10 bg-white/5 p-3">
+                <div class="text-sm text-slate-300 mb-2">Voice Recording</div>
+                <div class="flex flex-wrap gap-3">
+                  <button id="btnStartAudio" class="px-4 py-2 rounded-md bg-gradient-to-r from-magenta-600 to-violet-600 hover:from-magenta-500 hover:to-violet-500 focus:ring-2 focus:ring-magenta-500/60">🎙️ Start Voice</button>
+                  <button id="btnStopAudio" class="hidden px-4 py-2 rounded-md bg-white/10 hover:bg-white/15 border border-white/10">⏹️ Stop Voice</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: Gallery / Output -->
+        <aside class="rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-medium">Gallery</h2>
+              <button id="btnClear" class="text-xs px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/15 border border-white/10">🗑️ Clear All</button>
+            </div>
+            <div id="storageStats" class="text-xs text-slate-400 space-y-1">
+              <div>Loading...</div>
+            </div>
+          </div>
+          <div id="gallery" class="grid grid-cols-1 gap-4"></div>
+        </aside>
+      </main>
+
+      <footer class="mt-8 text-center text-xs text-slate-500">
+        Your media never leaves the browser. Built with WebRTC, MediaRecorder, and love.
+      </footer>
+    </div>
+
+    <script type="module" src="./js/ui.js"></script>
+  </body>
+  </html>

@@ -22,4 +22,21 @@ An accurate LLM token counter that runs entirely in your browser. This web appli
 **Tech Stack:**
 - Vanilla HTML, CSS, and JavaScript
 - OpenAI tiktoken library via WASM
-- CDN-served dependencies (unpkg)Quests
+- CDN-served dependencies (unpkg)
+
+### [Media Studio](./media-studio/)
+Record high quality videos, photos, and voice notes in your browser with a sleek dark glass UI.
+
+**Features:**
+- 📹 Camera preview with aspect ratio control (16:9, 9:16, 4:3, 3:2, 3:4, 2:3, 1:1)
+- 🧭 Preview auto-scales with max height of 512px while preserving aspect
+- 🎤 Record video with optional audio
+- 🗣️ Voice-only recorder for quick notes
+- ⏱️ Optional countdown timer (3s/5s/10s) for photo and recording starts
+- 🔘 Contextual Start/Stop buttons during recording
+- 📸 Photo capture using best-available quality path
+- ⬇️ Download recorded media
+- 🎨 Tailwind-powered dark theme with magenta accents
+
+**Run locally:**
+- `npm run serve` then open http://localhost:3333/media-studio/
